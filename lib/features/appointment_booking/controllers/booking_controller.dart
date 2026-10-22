@@ -4,6 +4,7 @@ import '../models/department_model.dart';
 import '../models/doctor_model.dart';
 import '../models/hospital_model.dart';
 import '../models/time_slot_model.dart';
+import '../services/appointment_repository.dart';
 
 /// Randevu akışını yöneten `ValueNotifier<BookingState>` controller
 class BookingController extends ValueNotifier<BookingState> {
@@ -120,7 +121,10 @@ class BookingController extends ValueNotifier<BookingState> {
   }
 
   /// Randevuyu onayla ve sisteme kaydet
-  Future<bool> confirmAppointment() async {
+  Future<bool> confirmAppointment({
+    String? patientName,
+    String? patientTc,
+  }) async {
     if (!value.isReadyForConfirmation) {
       value = value.copyWith(
         errorMessage: 'Lütfen tüm randevu adımlarını eksiksiz tamamlayınız.',
@@ -138,6 +142,28 @@ class BookingController extends ValueNotifier<BookingState> {
 
     final randomTrackingNumber =
         'RND-${DateTime.now().year}-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+
+    // Doktor ekranında randevunun gözükmesi için AppointmentRepository'ye ekle
+    final finalPatientName =
+        (patientName != null && patientName.trim().isNotEmpty)
+            ? patientName.trim()
+            : 'Ayşe Yılmaz';
+    final finalTc = (patientTc != null && patientTc.trim().isNotEmpty)
+        ? patientTc.trim()
+        : '12345678901';
+
+    final deptName = value.selectedDepartment?.name ?? 'Kardiyoloji';
+    final hospName = value.selectedHospital?.name ?? 'MedAuto Şehir Hastanesi';
+    final timeStr = value.selectedTimeSlot?.time ?? '10:00';
+    final docName = value.selectedDoctor?.name ?? 'Emre Çetin';
+
+    AppointmentRepository.instance.addAppointment(
+      patientName: finalPatientName,
+      tc: finalTc,
+      appointmentTime: timeStr,
+      complaint: '$deptName Muayenesi ($hospName)',
+      doctorName: docName,
+    );
 
     value = value.copyWith(
       isSubmitting: false,

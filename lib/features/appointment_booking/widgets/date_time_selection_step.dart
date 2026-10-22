@@ -80,7 +80,7 @@ class DateTimeSelectionStep extends StatelessWidget {
 
         // Yatay Gün Seçici
         SizedBox(
-          height: 78,
+          height: 98,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: availableDates.length,
@@ -101,8 +101,9 @@ class DateTimeSelectionStep extends StatelessWidget {
                 borderRadius: BorderRadius.circular(14),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  width: 64,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  width: 68,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? AppColors.primary
@@ -117,6 +118,7 @@ class DateTimeSelectionStep extends StatelessWidget {
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         isToday ? 'Bugün' : dayName,
@@ -128,13 +130,15 @@ class DateTimeSelectionStep extends StatelessWidget {
                               : AppColors.textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 3),
                       Text(
                         '${date.day}',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: isSelected ? Colors.white : AppColors.textPrimary,
+                          color: isSelected
+                              ? Colors.white
+                              : AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),

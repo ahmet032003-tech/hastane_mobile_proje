@@ -23,6 +23,9 @@ class PatientAuthRepository {
 
   final Map<String, _RegisteredPatientRecord> _users = {};
 
+  /// Hasta verisi güncellendiğinde tetiklenen bildirimci
+  final ValueNotifier<int> patientUpdatesNotifier = ValueNotifier<int>(0);
+
   /// Demo varsayılan hasta kayıtları
   void _initDefaultUsers() {
     _users['12345678901'] = _RegisteredPatientRecord(
@@ -49,6 +52,72 @@ class PatientAuthRepository {
         weightKg: 78.0,
         activeMedicationCount: 1,
         activeDiseases: ['Gastrit'],
+      ),
+    );
+
+    _users['24819582014'] = const _RegisteredPatientRecord(
+      password: '123456',
+      patient: PatientModel(
+        id: 'patient_003',
+        fullName: 'Fatma Şahin',
+        tc: '24819582014',
+        birthDate: '03 Mart 1979',
+        gender: 'Kadın',
+        bloodType: 'B Rh(+)',
+        phone: '+90 (535) 987 65 43',
+        email: 'fatma.sahin@medauto.health',
+        address: 'Acıbadem Mah. Üsküdar / İstanbul',
+        lastVisitDate: '22 Ekim 2026',
+        lastDoctorName: 'Doç. Dr. Emre Çetin',
+        lastDoctorBranch: 'Kardiyoloji Polikliniği 1',
+        heightCm: 162.0,
+        weightKg: 68.0,
+        activeMedicationCount: 0,
+        activeDiseases: ['Koroner Arter Hastalığı Riski'],
+      ),
+    );
+
+    _users['38192049182'] = const _RegisteredPatientRecord(
+      password: '123456',
+      patient: PatientModel(
+        id: 'patient_004',
+        fullName: 'Hasan Yurtseven',
+        tc: '38192049182',
+        birthDate: '12 Kasım 1968',
+        gender: 'Erkek',
+        bloodType: 'A Rh(-)',
+        phone: '+90 (542) 345 67 89',
+        email: 'hasan.yurtseven@medauto.health',
+        address: 'Koşuyolu Mah. Kadıköy / İstanbul',
+        lastVisitDate: '22 Ekim 2026',
+        lastDoctorName: 'Doç. Dr. Emre Çetin',
+        lastDoctorBranch: 'Kardiyoloji Polikliniği 1',
+        heightCm: 174.0,
+        weightKg: 82.0,
+        activeMedicationCount: 1,
+        activeDiseases: ['Esansiyel Hipertansiyon'],
+      ),
+    );
+
+    _users['51203948172'] = const _RegisteredPatientRecord(
+      password: '123456',
+      patient: PatientModel(
+        id: 'patient_005',
+        fullName: 'Zeynep Kaya',
+        tc: '51203948172',
+        birthDate: '18 Ağustos 1991',
+        gender: 'Kadın',
+        bloodType: '0 Rh(-)',
+        phone: '+90 (531) 234 56 78',
+        email: 'zeynep.kaya@medauto.health',
+        address: 'Caddebostan Mah. Kadıköy / İstanbul',
+        lastVisitDate: '22 Ekim 2026',
+        lastDoctorName: 'Doç. Dr. Emre Çetin',
+        lastDoctorBranch: 'Kardiyoloji Polikliniği 1',
+        heightCm: 166.0,
+        weightKg: 59.0,
+        activeMedicationCount: 0,
+        activeDiseases: ['Aritmi Şüphesi'],
       ),
     );
   }
@@ -107,7 +176,7 @@ class PatientAuthRepository {
     return true;
   }
 
-  /// Hasta klinik veya kişisel verilerini güncelle (ör: boy, kilo)
+  /// Hasta klinik veya kişisel verilerini güncelle (ör: boy, kilo, aktif ilaç sayısı)
   void updatePatientData(PatientModel updated) {
     final sanitizedTc = updated.tc.trim();
     final record = _users[sanitizedTc];
@@ -116,7 +185,13 @@ class PatientAuthRepository {
         password: record.password,
         patient: updated,
       );
+    } else {
+      _users[sanitizedTc] = _RegisteredPatientRecord(
+        password: '123456',
+        patient: updated,
+      );
     }
+    patientUpdatesNotifier.value++;
   }
 
   /// Testler için durum sıfırlama

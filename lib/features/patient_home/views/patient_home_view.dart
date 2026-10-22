@@ -56,7 +56,7 @@ class _PatientHomeViewState extends State<PatientHomeView> {
                 _buildHomeDashboard(patient, state),
 
                 // Sekme 1: İlaçlar ve Reçeteler
-                const MedicationsView(),
+                MedicationsView(patientTc: patient.tc),
 
                 // Sekme 2: Radyoloji ve Tahliller
                 const MedicalTestsView(),
@@ -108,7 +108,7 @@ class _PatientHomeViewState extends State<PatientHomeView> {
           const SizedBox(height: 20),
 
           // 4. Randevu Al Hızlı Aksiyon Kartı (4 Adımlı Seçim Akışı Başlatıcısı)
-          _buildQuickAppointmentCard(),
+          _buildQuickAppointmentCard(patient),
           const SizedBox(height: 24),
         ],
       ),
@@ -116,7 +116,7 @@ class _PatientHomeViewState extends State<PatientHomeView> {
   }
 
   /// Hızlı Randevu Alma Kartı (features/appointment_booking bağlantısı)
-  Widget _buildQuickAppointmentCard() {
+  Widget _buildQuickAppointmentCard(PatientModel patient) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -211,7 +211,7 @@ class _PatientHomeViewState extends State<PatientHomeView> {
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => const AppointmentBookingView(),
+                    builder: (_) => AppointmentBookingView(patient: patient),
                   ),
                 );
               },

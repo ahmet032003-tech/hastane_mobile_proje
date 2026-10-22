@@ -11,14 +11,17 @@ import '../widgets/date_time_selection_step.dart';
 import '../widgets/department_selection_step.dart';
 import '../widgets/doctor_selection_step.dart';
 import '../widgets/hospital_selection_step.dart';
+import '../../patient_home/models/patient_model.dart';
 
 /// 4 Adımlı Randevu Alma Sihirbazı Ekranı (features/appointment_booking)
 class AppointmentBookingView extends StatefulWidget {
   final BookingController? controller;
+  final PatientModel? patient;
 
   const AppointmentBookingView({
     super.key,
     this.controller,
+    this.patient,
   });
 
   @override
@@ -65,7 +68,10 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
               state: state,
               onCancel: () => Navigator.of(modalContext).pop(),
               onConfirm: () async {
-                final success = await _controller.confirmAppointment();
+                final success = await _controller.confirmAppointment(
+                  patientName: widget.patient?.fullName,
+                  patientTc: widget.patient?.tc,
+                );
                 if (modalContext.mounted && success) {
                   Navigator.of(modalContext).pop();
                 }

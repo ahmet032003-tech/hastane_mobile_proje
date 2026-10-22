@@ -1,4 +1,7 @@
 import 'package:flutter/foundation.dart';
+import 'doctor_patient_appointment.dart';
+
+export 'doctor_patient_appointment.dart';
 
 /// Doktor Dashboard ve Poliklinik Masası Durum Modeli (SKILL.md 2.2 & 2.3)
 @immutable
@@ -28,6 +31,89 @@ class DoctorDashboardState {
   /// Alt Menü Sekmesi (0: Randevu Listesi, 1: E-Reçete, 2: İstem Merkezi, 3: Doktor Profili)
   final int selectedMenuIndex;
 
+  /// Sıradaki hasta var mı? (Bekleyen hasta kalıp kalmadığı kontrolü)
+  final bool hasNextPatient;
+
+  /// Sıradaki hastalar kuyruğu
+  final List<DoctorPatientAppointment> upcomingQueue;
+
+  /// Günlük hasta akış listesi
+  final List<DoctorPatientAppointment> appointments;
+
+  static const List<DoctorPatientAppointment> defaultAppointments = [
+    DoctorPatientAppointment(
+      queueNumber: 13,
+      appointmentTime: '09:00',
+      patientName: 'Mehmet Özdemir',
+      complaint: 'Rutin EKG kontrolü',
+      status: 'Tamamlandı',
+      isCompleted: true,
+      tc: '10293847561',
+    ),
+    DoctorPatientAppointment(
+      queueNumber: 14,
+      appointmentTime: '09:30',
+      patientName: 'Ayşe Yılmaz',
+      complaint: 'Hipertansiyon ve baş dönmesi',
+      status: 'Tamamlandı',
+      isCompleted: true,
+      tc: '12345678901',
+    ),
+    DoctorPatientAppointment(
+      queueNumber: 15,
+      appointmentTime: '10:15',
+      patientName: 'Ahmet Demir',
+      complaint: 'Göğüs ağrısı ve çarpıntı',
+      status: 'Tamamlandı',
+      isCompleted: true,
+      tc: '48291048591',
+    ),
+    DoctorPatientAppointment(
+      queueNumber: 16,
+      appointmentTime: '14:15',
+      patientName: 'Fatma Şahin',
+      complaint: 'Göğüste sıkışma hissi, efor dispnesi ve sol kolda uyuşma',
+      status: 'Kapıda Bekliyor',
+      isActive: true,
+      tc: '24819582014',
+    ),
+    DoctorPatientAppointment(
+      queueNumber: 17,
+      appointmentTime: '14:45',
+      patientName: 'Hasan Yurtseven',
+      complaint: 'Rutin hipertansiyon ve EKG kontrolü',
+      status: 'Kapıda Bekliyor',
+      tc: '38192049182',
+    ),
+    DoctorPatientAppointment(
+      queueNumber: 18,
+      appointmentTime: '15:15',
+      patientName: 'Zeynep Kaya',
+      complaint: 'Efor testi değerlendirmesi',
+      status: 'Sırada',
+      tc: '51203948172',
+    ),
+  ];
+
+  static const List<DoctorPatientAppointment> defaultUpcomingQueue = [
+    DoctorPatientAppointment(
+      queueNumber: 17,
+      appointmentTime: '14:45',
+      patientName: 'Hasan Yurtseven',
+      complaint: 'Rutin hipertansiyon ve EKG kontrolü',
+      status: 'Kapıda Bekliyor',
+      tc: '38192049182',
+    ),
+    DoctorPatientAppointment(
+      queueNumber: 18,
+      appointmentTime: '15:15',
+      patientName: 'Zeynep Kaya',
+      complaint: 'Efor testi değerlendirmesi',
+      status: 'Sırada',
+      tc: '51203948172',
+    ),
+  ];
+
   const DoctorDashboardState({
     this.doctorName = 'Emre Çetin',
     this.doctorTitle = 'Doç. Dr.',
@@ -44,6 +130,9 @@ class DoctorDashboardState {
     this.nextPatientTc = '24819582014',
     this.isExamInProgress = false,
     this.selectedMenuIndex = 0,
+    this.hasNextPatient = true,
+    this.upcomingQueue = defaultUpcomingQueue,
+    this.appointments = defaultAppointments,
   });
 
   String get fullDoctorName => '$doctorTitle $doctorName';
@@ -63,6 +152,9 @@ class DoctorDashboardState {
     String? nextPatientTc,
     bool? isExamInProgress,
     int? selectedMenuIndex,
+    bool? hasNextPatient,
+    List<DoctorPatientAppointment>? upcomingQueue,
+    List<DoctorPatientAppointment>? appointments,
   }) {
     return DoctorDashboardState(
       doctorName: doctorName ?? this.doctorName,
@@ -82,6 +174,9 @@ class DoctorDashboardState {
       nextPatientTc: nextPatientTc ?? this.nextPatientTc,
       isExamInProgress: isExamInProgress ?? this.isExamInProgress,
       selectedMenuIndex: selectedMenuIndex ?? this.selectedMenuIndex,
+      hasNextPatient: hasNextPatient ?? this.hasNextPatient,
+      upcomingQueue: upcomingQueue ?? this.upcomingQueue,
+      appointments: appointments ?? this.appointments,
     );
   }
 
@@ -103,7 +198,10 @@ class DoctorDashboardState {
         other.nextPatientQueueNumber == nextPatientQueueNumber &&
         other.nextPatientTc == nextPatientTc &&
         other.isExamInProgress == isExamInProgress &&
-        other.selectedMenuIndex == selectedMenuIndex;
+        other.selectedMenuIndex == selectedMenuIndex &&
+        other.hasNextPatient == hasNextPatient &&
+        listEquals(other.upcomingQueue, upcomingQueue) &&
+        listEquals(other.appointments, appointments);
   }
 
   @override
@@ -121,6 +219,9 @@ class DoctorDashboardState {
         nextPatientQueueNumber.hashCode ^
         nextPatientTc.hashCode ^
         isExamInProgress.hashCode ^
-        selectedMenuIndex.hashCode;
+        selectedMenuIndex.hashCode ^
+        hasNextPatient.hashCode ^
+        upcomingQueue.hashCode ^
+        appointments.hashCode;
   }
 }

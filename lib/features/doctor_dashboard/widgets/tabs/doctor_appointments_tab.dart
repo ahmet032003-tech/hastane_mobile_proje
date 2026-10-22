@@ -1,57 +1,21 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../models/doctor_dashboard_state.dart';
 
 /// Randevu Listesi Sekmesi (SKILL.md 2.3: Günlük saatlik hasta akışı)
 class DoctorAppointmentsTab extends StatelessWidget {
-  const DoctorAppointmentsTab({super.key});
+  final List<DoctorPatientAppointment>? appointments;
 
-  static const List<Map<String, dynamic>> _appointments = [
-    {
-      'time': '09:00',
-      'patient': 'Mehmet Özdemir',
-      'complaint': 'Rutin EKG kontrolü',
-      'status': 'Tamamlandı',
-      'isCompleted': true,
-    },
-    {
-      'time': '09:30',
-      'patient': 'Ayşe Yılmaz',
-      'complaint': 'Hipertansiyon ve baş dönmesi',
-      'status': 'Tamamlandı',
-      'isCompleted': true,
-    },
-    {
-      'time': '10:15',
-      'patient': 'Ahmet Demir',
-      'complaint': 'Göğüs ağrısı ve çarpıntı',
-      'status': 'Tamamlandı',
-      'isCompleted': true,
-    },
-    {
-      'time': '14:15',
-      'patient': 'Fatma Şahin',
-      'complaint': 'Göğüste sıkışma hissi, efor dispnesi',
-      'status': 'Muayene Odasında',
-      'isActive': true,
-    },
-    {
-      'time': '14:45',
-      'patient': 'Hasan Yurtseven',
-      'complaint': 'İlaç raporu yenileme',
-      'status': 'Kapıda Bekliyor',
-      'isWaiting': true,
-    },
-    {
-      'time': '15:15',
-      'patient': 'Zeynep Kaya',
-      'complaint': 'Efor testi değerlendirmesi',
-      'status': 'Sırada',
-      'isWaiting': true,
-    },
-  ];
+  const DoctorAppointmentsTab({
+    super.key,
+    this.appointments,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final list = appointments ?? DoctorDashboardState.defaultAppointments;
+    final allCompleted = list.every((item) => item.isCompleted);
+
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       children: [
@@ -69,13 +33,17 @@ class DoctorAppointmentsTab extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.15),
+                color: allCompleted
+                    ? AppColors.success.withValues(alpha: 0.15)
+                    : AppColors.primary.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Text(
-                'Bugün • 24 Randevu',
+              child: Text(
+                allCompleted ? 'Bugün • Tümü Tamamlandı' : 'Bugün • 24 Randevu',
                 style: TextStyle(
-                  color: AppColors.primaryLight,
+                  color: allCompleted
+                      ? AppColors.success
+                      : AppColors.primaryLight,
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                 ),
@@ -84,10 +52,9 @@ class DoctorAppointmentsTab extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 14),
-
-        ..._appointments.map((item) {
-          final isCompleted = item['isCompleted'] == true;
-          final isActive = item['isActive'] == true;
+        ...list.map((item) {
+          final isCompleted = item.isCompleted;
+          final isActive = item.isActive;
 
           return Container(
             margin: const EdgeInsets.only(bottom: 10),
@@ -98,9 +65,7 @@ class DoctorAppointmentsTab extends StatelessWidget {
                   : AppColors.card,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: isActive
-                    ? AppColors.primaryLight
-                    : AppColors.border,
+                color: isActive ? AppColors.primaryLight : AppColors.border,
                 width: isActive ? 1.5 : 1,
               ),
             ),
@@ -119,7 +84,7 @@ class DoctorAppointmentsTab extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    item['time'] as String,
+                    item.appointmentTime,
                     style: TextStyle(
                       color: isCompleted
                           ? AppColors.success
@@ -137,7 +102,7 @@ class DoctorAppointmentsTab extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        item['patient'] as String,
+                        item.patientName,
                         style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 14,
@@ -146,7 +111,7 @@ class DoctorAppointmentsTab extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        item['complaint'] as String,
+                        item.complaint,
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 12,
@@ -169,7 +134,7 @@ class DoctorAppointmentsTab extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    item['status'] as String,
+                    item.status,
                     style: TextStyle(
                       color: isCompleted
                           ? AppColors.success

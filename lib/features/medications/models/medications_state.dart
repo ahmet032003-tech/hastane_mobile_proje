@@ -8,6 +8,9 @@ class MedicationsState {
   final String? selectedDiseaseFilter;
   final String searchQuery;
 
+  /// null: Tümü, true: Sadece Aktif İlaçlar, false: Sadece Geçmiş İlaçlar
+  final bool? activeFilter;
+
   /// Varsayılan sıralama: true = en yakından/en yeniden en eskiye, false = en uzaktan/en eskiden en yeniye
   final bool isSortDescending;
   final MedicationModel? selectedMedication;
@@ -16,9 +19,16 @@ class MedicationsState {
     this.medications = const [],
     this.selectedDiseaseFilter,
     this.searchQuery = '',
+    this.activeFilter,
     this.isSortDescending = true, // SKILL.md: Varsayılan olarak en yeni -> en eski
     this.selectedMedication,
   });
+
+  /// Aktif (güncel) ilaç sayısı
+  int get activeCount => medications.where((m) => m.isActive).length;
+
+  /// Geçmiş (tamamlanan) ilaç sayısı
+  int get pastCount => medications.where((m) => !m.isActive).length;
 
   /// Filtrelenmiş ve sıralanmış ilaç listesi
   List<MedicationModel> get filteredMedications {
@@ -35,10 +45,14 @@ class MedicationsState {
       final matchesDisease = selectedDiseaseFilter == null ||
           med.diseaseReason == selectedDiseaseFilter;
 
-      return matchesQuery && matchesDisease;
+      // 3. Aktif / Geçmiş Durum Filtresi
+      final matchesStatus =
+          activeFilter == null || med.isActive == activeFilter;
+
+      return matchesQuery && matchesDisease && matchesStatus;
     }).toList();
 
-    // 3. Sıralama: En yeni -> en eski veya tam tersi
+    // 4. Sıralama: En yeni -> en eski veya tam tersi
     result.sort((a, b) {
       return isSortDescending
           ? b.prescribedDate.compareTo(a.prescribedDate)
@@ -57,9 +71,11 @@ class MedicationsState {
     List<MedicationModel>? medications,
     String? selectedDiseaseFilter,
     String? searchQuery,
+    bool? activeFilter,
     bool? isSortDescending,
     MedicationModel? selectedMedication,
     bool clearDiseaseFilter = false,
+    bool clearActiveFilter = false,
     bool clearSelectedMedication = false,
   }) {
     return MedicationsState(
@@ -68,6 +84,8 @@ class MedicationsState {
           ? null
           : (selectedDiseaseFilter ?? this.selectedDiseaseFilter),
       searchQuery: searchQuery ?? this.searchQuery,
+      activeFilter:
+          clearActiveFilter ? null : (activeFilter ?? this.activeFilter),
       isSortDescending: isSortDescending ?? this.isSortDescending,
       selectedMedication: clearSelectedMedication
           ? null
@@ -83,6 +101,7 @@ class MedicationsState {
         listEquals(other.medications, medications) &&
         other.selectedDiseaseFilter == selectedDiseaseFilter &&
         other.searchQuery == searchQuery &&
+        other.activeFilter == activeFilter &&
         other.isSortDescending == isSortDescending &&
         other.selectedMedication == selectedMedication;
   }
@@ -92,6 +111,7 @@ class MedicationsState {
     return medications.hashCode ^
         selectedDiseaseFilter.hashCode ^
         searchQuery.hashCode ^
+        activeFilter.hashCode ^
         isSortDescending.hashCode ^
         selectedMedication.hashCode;
   }

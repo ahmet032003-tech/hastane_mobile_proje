@@ -23,6 +23,8 @@ void main() {
       expect(controller.value.waitingPatients, 9);
       expect(controller.value.isExamInProgress, isFalse);
       expect(controller.value.selectedMenuIndex, 0);
+      expect(controller.value.hasNextPatient, isTrue);
+      expect(controller.value.nextPatientName, 'Fatma Şahin');
     });
 
     test('toggleExamStatus updates isExamOpen correctly', () {
@@ -52,7 +54,35 @@ void main() {
       expect(controller.value.completedExaminations, initialCompleted + 1);
       expect(controller.value.waitingPatients, initialWaiting - 1);
       expect(controller.value.nextPatientQueueNumber, initialQueue + 1);
-      expect(controller.value.nextPatientName, isNotEmpty);
+      expect(controller.value.nextPatientName, 'Hasan Yurtseven');
+      expect(controller.value.hasNextPatient, isTrue);
+    });
+
+    test('finishCurrentExamination calls next patient after Hasan Yurtseven and handles queue empty', () {
+      // 1. Hasta: Fatma Şahin -> Bitir
+      controller.finishCurrentExamination();
+      expect(controller.value.nextPatientName, 'Hasan Yurtseven');
+      expect(controller.value.nextPatientQueueNumber, 17);
+      expect(controller.value.hasNextPatient, isTrue);
+
+      // 2. Hasta: Hasan Yurtseven -> Bitir (Sıradaki Zeynep Kaya çağrılmalı)
+      controller.finishCurrentExamination();
+      expect(controller.value.nextPatientName, 'Zeynep Kaya');
+      expect(controller.value.nextPatientQueueNumber, 18);
+      expect(controller.value.hasNextPatient, isTrue);
+
+      // 3. Hasta: Zeynep Kaya -> Bitir (Kuyruk bitmeli, bilgilendirme durumuna geçmeli)
+      controller.finishCurrentExamination();
+      expect(controller.value.hasNextPatient, isFalse);
+      expect(controller.value.waitingPatients, 0);
+      expect(controller.value.nextPatientName, isEmpty);
+      expect(controller.value.isExamInProgress, isFalse);
+
+      // 4. Sıfırlama testi
+      controller.resetQueue();
+      expect(controller.value.hasNextPatient, isTrue);
+      expect(controller.value.nextPatientName, 'Fatma Şahin');
+      expect(controller.value.waitingPatients, 9);
     });
 
     test('setMenuIndex switches between dashboard tabs', () {

@@ -10,10 +10,12 @@ import '../widgets/medication_filters_bar.dart';
 /// İlaçlar ve Reçeteler Ekranı (features/medications)
 class MedicationsView extends StatefulWidget {
   final MedicationsController? controller;
+  final String? patientTc;
 
   const MedicationsView({
     super.key,
     this.controller,
+    this.patientTc,
   });
 
   @override
@@ -26,7 +28,8 @@ class _MedicationsViewState extends State<MedicationsView> {
   @override
   void initState() {
     super.initState();
-    _controller = widget.controller ?? MedicationsController();
+    _controller = widget.controller ??
+        MedicationsController(patientTc: widget.patientTc);
   }
 
   @override
@@ -78,18 +81,26 @@ class _MedicationsViewState extends State<MedicationsView> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.15),
+                        color: AppColors.success.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                            color: AppColors.primary.withValues(alpha: 0.3)),
+                            color: AppColors.success.withValues(alpha: 0.4)),
                       ),
-                      child: Text(
-                        '${list.length} İlaç',
-                        style: const TextStyle(
-                          color: AppColors.primaryLight,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.check_circle_rounded,
+                              size: 13, color: AppColors.success),
+                          const SizedBox(width: 5),
+                          Text(
+                            '${state.activeCount} Aktif İlaç',
+                            style: const TextStyle(
+                              color: AppColors.success,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -102,9 +113,14 @@ class _MedicationsViewState extends State<MedicationsView> {
                   isSortDescending: state.isSortDescending,
                   availableDiseases: state.availableDiseases,
                   selectedDiseaseFilter: state.selectedDiseaseFilter,
+                  activeFilter: state.activeFilter,
+                  activeCount: state.activeCount,
+                  pastCount: state.pastCount,
+                  totalCount: state.medications.length,
                   onSearchChanged: _controller.setSearchQuery,
                   onToggleSort: _controller.toggleSortOrder,
                   onDiseaseSelected: _controller.setDiseaseFilter,
+                  onStatusSelected: _controller.setStatusFilter,
                 ),
                 const SizedBox(height: 16),
 

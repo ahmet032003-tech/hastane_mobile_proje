@@ -16,6 +16,12 @@ class MedicationModel {
   final String barcode;
   final String instructionsDetail;
 
+  /// İlacın aktif (güncel tedavi) mi yoksa geçmiş (biten) mi olduğu
+  final bool isActive;
+
+  /// İlacın reçete edildiği hastanın T.C. Kimlik Numarası (opsiyonel)
+  final String? patientTc;
+
   const MedicationModel({
     required this.id,
     required this.name,
@@ -29,6 +35,8 @@ class MedicationModel {
     required this.boxCount,
     required this.barcode,
     required this.instructionsDetail,
+    this.isActive = true,
+    this.patientTc,
   });
 
   /// Tarih formatı (GG.AA.YYYY)
@@ -39,7 +47,41 @@ class MedicationModel {
     return '$d.$m.$y';
   }
 
-  static List<MedicationModel> mockList() {
+  MedicationModel copyWith({
+    String? id,
+    String? name,
+    DateTime? prescribedDate,
+    String? expiryDate,
+    String? doctorName,
+    String? doctorBranch,
+    String? diseaseReason,
+    String? usageInstructions,
+    String? dosage,
+    int? boxCount,
+    String? barcode,
+    String? instructionsDetail,
+    bool? isActive,
+    String? patientTc,
+  }) {
+    return MedicationModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      prescribedDate: prescribedDate ?? this.prescribedDate,
+      expiryDate: expiryDate ?? this.expiryDate,
+      doctorName: doctorName ?? this.doctorName,
+      doctorBranch: doctorBranch ?? this.doctorBranch,
+      diseaseReason: diseaseReason ?? this.diseaseReason,
+      usageInstructions: usageInstructions ?? this.usageInstructions,
+      dosage: dosage ?? this.dosage,
+      boxCount: boxCount ?? this.boxCount,
+      barcode: barcode ?? this.barcode,
+      instructionsDetail: instructionsDetail ?? this.instructionsDetail,
+      isActive: isActive ?? this.isActive,
+      patientTc: patientTc ?? this.patientTc,
+    );
+  }
+
+  static List<MedicationModel> mockList({String defaultPatientTc = '12345678901'}) {
     return [
       MedicationModel(
         id: 'med_01',
@@ -55,6 +97,8 @@ class MedicationModel {
         barcode: '8699525010012',
         instructionsDetail:
             'Her gün sabah kahvaltısından sonra 1 bardak su ile çiğnenmeden yutulmalıdır. Tansiyon ve pıhtılaşma profilaksisi için düzenli kullanılmalıdır.',
+        isActive: true,
+        patientTc: defaultPatientTc,
       ),
       MedicationModel(
         id: 'med_02',
@@ -70,6 +114,8 @@ class MedicationModel {
         barcode: '8699508520210',
         instructionsDetail:
             'İnhaleri kullanmadan önce iyice çalkalayınız. Derin bir nefes verdikten sonra ağızlığı dudaklarınızla kavrayarak nefes alma anında sıkınız ve 10 saniye nefesinizi tutunuz.',
+        isActive: true,
+        patientTc: defaultPatientTc,
       ),
       MedicationModel(
         id: 'med_03',
@@ -85,6 +131,8 @@ class MedicationModel {
         barcode: '8699546010023',
         instructionsDetail:
             'B1, B6 ve B12 vitamin kombinasyonudur. Sinir iletimi ve halsizlik semptomları için sabah tok karna alınmalıdır.',
+        isActive: true,
+        patientTc: defaultPatientTc,
       ),
       MedicationModel(
         id: 'med_04',
@@ -100,6 +148,8 @@ class MedicationModel {
         barcode: '8699508090515',
         instructionsDetail:
             'İnsülin duyarlılığını artırmak ve kan şekerini dengelemek amacıyla yemeklerle birlikte veya yemekten hemen sonra alınmalıdır.',
+        isActive: false,
+        patientTc: defaultPatientTc,
       ),
       MedicationModel(
         id: 'med_05',
@@ -115,6 +165,8 @@ class MedicationModel {
         barcode: '8699569340015',
         instructionsDetail:
             'Ağrılı bel ve kas bölgesine hafif masaj yapılarak günde 3 kez uygulanır. Açık yaralara sürülmemelidir.',
+        isActive: false,
+        patientTc: defaultPatientTc,
       ),
     ];
   }
@@ -124,8 +176,9 @@ class MedicationModel {
       identical(this, other) ||
       other is MedicationModel &&
           runtimeType == other.runtimeType &&
-          id == other.id;
+          id == other.id &&
+          isActive == other.isActive;
 
   @override
-  int get hashCode => id.hashCode;
+  int get hashCode => id.hashCode ^ isActive.hashCode;
 }

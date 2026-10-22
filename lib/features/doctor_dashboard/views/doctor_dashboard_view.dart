@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../controllers/doctor_dashboard_controller.dart';
 import '../models/doctor_dashboard_state.dart';
 import '../widgets/doctor_bottom_nav_bar.dart';
@@ -40,6 +41,103 @@ class _DoctorDashboardViewState extends State<DoctorDashboardView> {
     super.dispose();
   }
 
+  void _handleFinishExamination() {
+    final wasLastPatient = _controller.value.upcomingQueue.isEmpty;
+    _controller.finishCurrentExamination();
+
+    if (wasLastPatient || !_controller.value.hasNextPatient) {
+      _showAllExaminationsCompletedNotification();
+    }
+  }
+
+  void _showAllExaminationsCompletedNotification() {
+    if (!mounted) return;
+
+    // Toast/SnackBar bildirimi
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Row(
+          children: [
+            Icon(Icons.check_circle_rounded, color: Colors.white),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Tüm hastalar muayene edildi. Bekleyen hasta kalmadı!',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 4),
+      ),
+    );
+
+    // Bilgilendirme Diyaloğu
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: AppColors.card,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: AppColors.border),
+        ),
+        icon: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.success.withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.task_alt_rounded,
+            color: AppColors.success,
+            size: 40,
+          ),
+        ),
+        title: const Text(
+          'Tüm Muayeneler Tamamlandı',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: const Text(
+          'Sayın hekimimiz, bugünkü poliklinik randevu listesindeki tüm hastaların muayenesi başarıyla tamamlandı.\n\nBekleyen başka hasta kalmamıştır. Tebrik eder, iyi dinlenmeler dileriz.',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 14,
+            height: 1.45,
+          ),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text(
+              'Anladım',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<DoctorDashboardState>(
@@ -55,12 +153,21 @@ class _DoctorDashboardViewState extends State<DoctorDashboardView> {
 
                 // Sekme 1: E-Reçete Masası
                 DoctorEPrescriptionTab(
-                  patientName: state.nextPatientName,
-                  patientTc: state.nextPatientTc,
+                  patientName: state.hasNextPatient
+                      ? state.nextPatientName
+                      : 'Kayıtlı / Aktif Hasta Yok',
+                  patientTc: state.hasNextPatient ? state.nextPatientTc : '-',
+                  availablePatients: state.appointments,
+                  doctorName: state.fullDoctorName,
+                  clinicName: state.clinicName,
                 ),
 
                 // Sekme 2: İstem Merkezi
-                DoctorOrdersTab(patientName: state.nextPatientName),
+                DoctorOrdersTab(
+                  patientName: state.hasNextPatient
+                      ? state.nextPatientName
+                      : 'Kayıtlı / Aktif Hasta Yok',
+                ),
 
                 // Sekme 3: Doktor Profili & Çalışma Takvimi
                 DoctorProfileTab(
@@ -110,15 +217,19 @@ class _DoctorDashboardViewState extends State<DoctorDashboardView> {
             queueNumber: state.nextPatientQueueNumber,
             tc: state.nextPatientTc,
             isExamInProgress: state.isExamInProgress,
+            hasNextPatient: state.hasNextPatient,
             onStartExam: _controller.startCurrentExamination,
-            onFinishExam: _controller.finishCurrentExamination,
+            onFinishExam: _handleFinishExamination,
+            onResetQueue: _controller.resetQueue,
           ),
           const SizedBox(height: 18),
 
           // 4. Günlük Randevu Akışı Özeti
-          const SizedBox(
+          SizedBox(
             height: 380,
-            child: DoctorAppointmentsTab(),
+            child: DoctorAppointmentsTab(
+              appointments: state.appointments,
+            ),
           ),
         ],
       ),

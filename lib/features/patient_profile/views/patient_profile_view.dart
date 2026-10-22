@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../medications/models/medication_model.dart';
+import '../../medications/services/medication_repository.dart';
 import '../../patient_auth/services/patient_auth_repository.dart';
 import '../../patient_auth/views/patient_login_view.dart';
 import '../../patient_home/models/patient_model.dart';
@@ -43,11 +45,15 @@ class PatientProfileView extends StatelessWidget {
             _buildPersonalInfoSection(context),
             const SizedBox(height: 20),
 
-            // 3. Sağlık & Hesap Güvenliği Butonları
+            // 3. Aktif Tedavi & İlaçlarım Bölümü
+            _buildActiveMedicationsSection(context),
+            const SizedBox(height: 20),
+
+            // 4. Sağlık & Hesap Güvenliği Butonları
             _buildSecuritySection(context),
             const SizedBox(height: 24),
 
-            // 4. Çıkış Yap Butonu
+            // 5. Çıkış Yap Butonu
             _buildLogoutButton(context),
             const SizedBox(height: 32),
           ],
@@ -250,6 +256,180 @@ class PatientProfileView extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  /// Aktif Tedavi ve Reçeteli İlaçlar Bölümü (Hekim ilaç atamalarını canlı gösterir)
+  Widget _buildActiveMedicationsSection(BuildContext context) {
+    return ValueListenableBuilder<List<MedicationModel>>(
+      valueListenable: MedicationRepository.instance.medicationsNotifier,
+      builder: (context, _, _) {
+        final activeMeds = MedicationRepository.instance
+            .getMedicationsForPatient(patient.tc)
+            .where((m) => m.isActive)
+            .toList();
+
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: AppColors.success.withValues(alpha: 0.35),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(
+                          Icons.medication_rounded,
+                          color: AppColors.success,
+                          size: 20,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Aktif Tedavi & İlaçlarım',
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.success.withValues(alpha: 0.4),
+                        ),
+                      ),
+                      child: Text(
+                        '${activeMeds.length} Aktif İlaç',
+                        style: const TextStyle(
+                          color: AppColors.success,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(color: AppColors.border, height: 1),
+              if (activeMeds.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(
+                    child: Text(
+                      'Şu an profilinizde aktif reçeteli ilaç bulunmamaktadır.',
+                      style: TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: activeMeds.length,
+                  separatorBuilder: (_, _) =>
+                      const Divider(color: AppColors.border, height: 1, indent: 16),
+                  itemBuilder: (context, index) {
+                    final med = activeMeds[index];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceSecondary,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.medication_liquid_rounded,
+                              size: 18,
+                              color: AppColors.primaryLight,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        med.name,
+                                        style: const TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.success
+                                            .withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: const Text(
+                                        '✓ Aktif İlaç',
+                                        style: TextStyle(
+                                          color: AppColors.success,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  '${med.dosage} • ${med.usageInstructions}',
+                                  style: const TextStyle(
+                                    color: AppColors.secondary,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Hekim: ${med.doctorName} • ${med.formattedPrescribedDate}',
+                                  style: const TextStyle(
+                                    color: AppColors.textMuted,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 

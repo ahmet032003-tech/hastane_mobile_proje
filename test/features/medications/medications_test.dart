@@ -58,10 +58,32 @@ void main() {
       expect(list.length, 1);
       expect(list.first.name, contains('Benexol'));
     });
+
+    test('Filters by active and past medication status', () {
+      expect(controller.value.activeCount, 3);
+      expect(controller.value.pastCount, 2);
+
+      // 1. Sadece aktif ilaçları filtrele
+      controller.setStatusFilter(true);
+      final activeList = controller.value.filteredMedications;
+      expect(activeList.length, 3);
+      expect(activeList.every((m) => m.isActive), isTrue);
+
+      // 2. Sadece geçmiş ilaçları filtrele
+      controller.setStatusFilter(false);
+      final pastList = controller.value.filteredMedications;
+      expect(pastList.length, 2);
+      expect(pastList.every((m) => !m.isActive), isTrue);
+
+      // 3. Filtreyi kaldır (Tümü)
+      controller.setStatusFilter(null);
+      expect(controller.value.filteredMedications.length, 5);
+    });
   });
 
   group('MedicationsView Widget Tests', () {
-    testWidgets('Renders medication cards and opens detail modal on tap',
+    testWidgets(
+        'Renders medication cards with active/past status and opens detail modal on tap',
         (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
@@ -70,10 +92,20 @@ void main() {
         ),
       );
 
-      // Başlık ve filtreler
+      // Başlık ve aktif ilaç sayısı rozeti
       expect(find.text('İlaçlar ve Reçeteler'), findsOneWidget);
+      expect(find.text('3 Aktif İlaç'), findsOneWidget);
       expect(find.text('En Yeni'), findsOneWidget);
       expect(find.text('Tümü'), findsOneWidget);
+
+      // Durum segment filtreleri
+      expect(find.text('Tümü (5)'), findsOneWidget);
+      expect(find.text('Aktif İlaçlar (3)'), findsOneWidget);
+      expect(find.text('Geçmiş (2)'), findsOneWidget);
+
+      // Kartlardaki Aktif İlaç ve Geçmiş etiketleri
+      expect(find.text('Aktif İlaç'), findsNWidgets(3));
+      expect(find.text('Geçmiş'), findsNWidgets(2));
 
       // İlaç kartları görünmeli
       expect(find.text('Kopidogrel 75 mg Film Tablet'), findsOneWidget);
@@ -83,7 +115,10 @@ void main() {
       await tester.tap(find.text('Kopidogrel 75 mg Film Tablet'));
       await tester.pumpAndSettle();
 
-      // Detay modalında zorunlu alanlar görünmeli (hekim, gerekçe, son kullanım, kullanım talimatı)
+      // Detay modalında durum bilgilendirme rozeti ve zorunlu alanlar görünmeli
+      expect(find.text('Aktif İlaç (Güncel Tedavi)'), findsOneWidget);
+      expect(find.text('Reçete ve Tedavi Durumu'), findsOneWidget);
+      expect(find.text('Aktif (Kullanılıyor)'), findsOneWidget);
       expect(find.text('İlacı Yazan Hekim'), findsOneWidget);
       expect(find.text('Doç. Dr. Emre Çetin'), findsOneWidget);
       expect(find.text('Yazılma Gerekçesi (Hastalık / Tanı)'), findsOneWidget);

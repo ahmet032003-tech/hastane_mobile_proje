@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../models/medication_model.dart';
 
-/// İlaç Detay Kartı (SKILL.md: İlacı yazan hekim, yazılma gerekçesi, son kullanım tarihi ve kullanım talimatı)
+/// İlaç Detay Kartı (SKILL.md: İlacı yazan hekim, yazılma gerekçesi, son kullanım tarihi, kullanım talimatı ve güncel/geçmiş durum)
 class MedicationDetailModal extends StatelessWidget {
   final MedicationModel medication;
 
@@ -13,6 +13,8 @@ class MedicationDetailModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isActive = medication.isActive;
+
     return SingleChildScrollView(
       padding: EdgeInsets.only(
         left: 20,
@@ -47,12 +49,18 @@ class MedicationDetailModal extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.15),
+                        color: isActive
+                            ? AppColors.primary.withValues(alpha: 0.15)
+                            : AppColors.surfaceSecondary,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(
-                        Icons.medication_liquid_rounded,
-                        color: AppColors.primaryLight,
+                      child: Icon(
+                        isActive
+                            ? Icons.medication_liquid_rounded
+                            : Icons.medication_rounded,
+                        color: isActive
+                            ? AppColors.primaryLight
+                            : AppColors.textMuted,
                         size: 24,
                       ),
                     ),
@@ -90,7 +98,68 @@ class MedicationDetailModal extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
+
+          // Aktif / Geçmiş İlaç Durum Bilgilendirme Rozeti
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: isActive
+                  ? AppColors.success.withValues(alpha: 0.15)
+                  : AppColors.surfaceSecondary,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isActive
+                    ? AppColors.success.withValues(alpha: 0.45)
+                    : AppColors.border,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  isActive
+                      ? Icons.check_circle_rounded
+                      : Icons.history_rounded,
+                  color: isActive ? AppColors.success : AppColors.textMuted,
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isActive
+                            ? 'Aktif İlaç (Güncel Tedavi)'
+                            : 'Geçmiş İlaç (Tedavi Tamamlandı)',
+                        style: TextStyle(
+                          color: isActive
+                              ? AppColors.success
+                              : AppColors.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        isActive
+                            ? 'Bu ilaç hekiminiz tarafından aktif kullanım için reçete edilmiştir. Düzenli kullanmaya devam ediniz.'
+                            : 'Bu ilacın tedavi süresi sona ermiştir. Güncel reçetenizde yer almamaktadır.',
+                        style: TextStyle(
+                          color: isActive
+                              ? AppColors.success.withValues(alpha: 0.9)
+                              : AppColors.textSecondary,
+                          fontSize: 11,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
 
           // Detay Bölümleri Kartı
           Container(
@@ -136,6 +205,18 @@ class MedicationDetailModal extends StatelessWidget {
                   value: medication.usageInstructions,
                   subtitle: medication.dosage,
                   valueColor: AppColors.primaryLight,
+                ),
+                const Divider(color: AppColors.border, height: 20),
+
+                // 5. Reçete Durumu
+                _buildDetailRow(
+                  icon: Icons.info_outline_rounded,
+                  label: 'Reçete ve Tedavi Durumu',
+                  value: isActive
+                      ? 'Aktif (Kullanılıyor)'
+                      : 'Geçmiş (Kullanım Bitti)',
+                  valueColor:
+                      isActive ? AppColors.success : AppColors.textMuted,
                 ),
               ],
             ),
@@ -199,13 +280,36 @@ class MedicationDetailModal extends StatelessWidget {
             width: double.infinity,
             height: 48,
             child: ElevatedButton.icon(
-              icon: const Icon(Icons.alarm_add_rounded, size: 18),
-              label: const Text('İlaç Hatırlatıcısı Kur'),
+              icon: const Icon(Icons.alarm_add_rounded, size: 20),
+              label: Text(
+                isActive
+                    ? 'Kullanım Hatırlatıcısı Kur'
+                    : 'Geçmiş Reçeteyi Paylaş',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    isActive ? AppColors.primary : AppColors.surfaceSecondary,
+                foregroundColor:
+                    isActive ? Colors.white : AppColors.textSecondary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('${medication.name} için günlük alarm kuruldu.'),
+                    content: Text(
+                      isActive
+                          ? '${medication.name} için günlük dozaj hatırlatıcısı kuruldu.'
+                          : '${medication.name} geçmiş reçete bilgisi kopyalandı.',
+                    ),
+                    backgroundColor:
+                        isActive ? AppColors.success : AppColors.surface,
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
@@ -227,14 +331,7 @@ class MedicationDetailModal extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceSecondary,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, size: 18, color: AppColors.primaryLight),
-        ),
+        Icon(icon, size: 18, color: AppColors.primaryLight),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -244,8 +341,7 @@ class MedicationDetailModal extends StatelessWidget {
                 label,
                 style: const TextStyle(
                   color: AppColors.textMuted,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 12,
                 ),
               ),
               const SizedBox(height: 2),
@@ -254,7 +350,7 @@ class MedicationDetailModal extends StatelessWidget {
                 style: TextStyle(
                   color: valueColor ?? AppColors.textPrimary,
                   fontSize: 14,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               if (subtitle != null) ...[
